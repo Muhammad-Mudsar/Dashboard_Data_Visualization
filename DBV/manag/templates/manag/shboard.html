@@ -1,0 +1,197 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saff Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Sales Dashboard</h1>
+
+        <!-- Date Range Filter -->
+        <div class="flex flex-wrap gap-4 mb-6 bg-white p-4 rounded-lg shadow">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Start Date</label>
+                <input type="date" id="startDate"
+                    class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">End Date</label>
+                <input type="date" id="endDate"
+                    class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+            </div>
+            <div class="self-end">
+                <button id="applyFilter"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md">
+                    Apply
+                </button>
+            </div>
+        </div>
+
+        <!-- chart sample code2 -->
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- <div class="bg-white p-4 rounded-lg shadow">
+                <h2 class="text-lg font-semibold mb-4">Revenue by Product</h2>
+                <div class="h-64">
+                    <canvas id="productChart" class="w-full h-full"></canvas>
+                </div>
+            </div> -->
+            <!-- <div class="bg-white p-4 rounded-lg shadow">
+                <h2 class="text-lg font-semibold mb-4">Revenue Over Time</h2>
+                <div class="h-64">
+                    <canvas id="lineChart" class="w-full h-full"></canvas>
+                </div>
+            </div> -->
+        </div>
+        <!-- <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h2 class="text-lg font-semibold mb-4">Revenue by Category</h2>
+                <div class="h-64">
+                    <canvas id="pieChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+        </div> -->
+        <!-- chart sample code2! -->
+
+        <!-- Stat Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-5 rounded-lg shadow">
+                <p class="text-sm text-gray-500">Total Revenue</p>
+                <p id="totalRevenue" class="text-2xl font-semibold text-gray-800">$0.00</p>
+            </div>
+            <div class="bg-white p-5 rounded-lg shadow">
+                <p class="text-sm text-gray-500">Total Orders</p>
+                <p id="totalOrders" class="text-2xl font-semibold text-gray-800">0</p>
+            </div>
+            <div class="bg-white p-5 rounded-lg shadow">
+                <p class="text-sm text-gray-500">Avg Order Value</p>
+                <p id="avgOrderValue" class="text-2xl font-semibold text-gray-800">$0.00</p>
+            </div>
+            <div class="bg-white p-5 rounded-lg shadow">
+                <p class="text-sm text-gray-500">Unique Products Sold</p>
+                <p id="uniqueProducts" class="text-2xl font-semibold text-gray-800">0</p>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h2 class="text-lg font-semibold mb-4">Revenue by Product</h2>
+                <div class="h-64">
+
+                    <canvas id="productChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h2 class="text-lg font-semibold mb-4">Revenue Over Time</h2>
+                <div class="h-64">
+
+                    <canvas id="lineChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-4 rounded-lg shadow">
+                <h2 class="text-lg font-semibold mb-4">Revenue by Category</h2>
+                <div class="h-64">
+
+                    <canvas id="pieChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize charts
+        let productChart, lineChart, pieChart;
+
+        function initCharts() {
+            const ctx1 = document.getElementById('productChart').getContext('2d');
+            productChart = new Chart(ctx1, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Revenue', data: [], backgroundColor: 'rgba(79, 70, 229, 0.7)' }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctx2 = document.getElementById('lineChart').getContext('2d');
+            lineChart = new Chart(ctx2, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Revenue', data: [], borderColor: 'rgba(16, 185, 129, 1)', tension: 0.3, fill: false }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctx3 = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(ctx3, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#f59e0b', '#3b82f6', '#ef4444', '#10b981', '#8b5cf6', '#ec4899'] }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function updateDashboard(start, end) {
+            const params = new URLSearchParams();
+            if (start) params.append('start', start);
+            if (end) params.append('end', end);
+            const url = "{% url 'dashboard:data' %}" + (params.toString() ? '?' + params.toString() : '');
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Update stat cards
+                    document.getElementById('totalRevenue').textContent = '$' + data.stat_cards.total_revenue.toFixed(2);
+                    document.getElementById('totalOrders').textContent = data.stat_cards.total_orders;
+                    document.getElementById('avgOrderValue').textContent = '$' + data.stat_cards.avg_order_value.toFixed(2);
+                    document.getElementById('uniqueProducts').textContent = data.stat_cards.unique_products;
+
+                    // Update product chart
+                    productChart.data.labels = data.product_revenue.labels;
+                    productChart.data.datasets[0].data = data.product_revenue.values;
+                    productChart.update();
+
+                    // Update line chart
+                    lineChart.data.labels = data.daily_revenue.labels;
+                    lineChart.data.datasets[0].data = data.daily_revenue.values;
+                    lineChart.update();
+
+                    // Update pie chart
+                    pieChart.data.labels = data.category_revenue.labels;
+                    pieChart.data.datasets[0].data = data.category_revenue.values;
+                    pieChart.update();
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            // Set default dates (last 30 days)
+            const today = new Date();
+            const start = new Date();
+            start.setDate(today.getDate() - 29);
+            document.getElementById('startDate').value = start.toISOString().split('T')[0];
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            updateDashboard(
+                document.getElementById('startDate').value,
+                document.getElementById('endDate').value
+            );
+        });
+
+        // Apply filter button
+        document.getElementById('applyFilter').addEventListener('click', () => {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            updateDashboard(start, end);
+            // console.log("")
+        });
+    </script>
+</body>
+
+</html>

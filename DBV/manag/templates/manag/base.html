@@ -1,0 +1,112 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Dashboard{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+  <!-- Sidebar + Main Wrapper -->
+  <div class="flex flex-1">
+    <!-- Sidebar -->
+    <aside id="sidebar"
+      class="bg-gray-900 text-white w-64 flex-shrink-0 min-h-screen transition-all duration-300 ease-in-out lg:static lg:translate-x-0 fixed inset-y-0 left-0 transform -translate-x-full lg:flex lg:flex-col z-50">
+      <div class="p-4 flex items-center justify-between">
+        <h1 class="text-xl font-bold">My Dashboard</h1>
+        <button id="closeSidebar" class="lg:hidden text-gray-300 hover:text-white">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <nav class="flex-1 px-2 space-y-1 mt-4">
+        <a href="#" class="block px-4 py-2 text-sm rounded-md bg-gray-800 text-white">
+          <i class="fas fa-home mr-2"></i> Home
+        </a>
+        <a href="#" class="block px-4 py-2 text-sm rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+          <i class="fas fa-chart-bar mr-2"></i> Analytics
+        </a>
+        <a href="#" class="block px-4 py-2 text-sm rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+          <i class="fas fa-shopping-cart mr-2"></i> Orders
+        </a>
+        <a href="#" class="block px-4 py-2 text-sm rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+          <i class="fas fa-users mr-2"></i> Customers
+        </a>
+        <a href="#" class="block px-4 py-2 text-sm rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+          <i class="fas fa-cog mr-2"></i> Settings
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Overlay for mobile -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden lg:hidden"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-w-0">
+      <!-- Header -->
+      <header class="bg-white shadow-sm sticky top-0 z-30">
+        <div class="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div class="flex items-center">
+            <button id="openSidebar" class="lg:hidden mr-3 text-gray-600 hover:text-gray-900">
+              <i class="fas fa-bars text-xl"></i>
+            </button>
+            <h2 class="text-lg font-semibold text-gray-800">{% block page_title %}Dashboard{% endblock %}</h2>
+          </div>
+          <div class="flex items-center space-x-4">
+            <button class="text-gray-500 hover:text-gray-700 relative">
+              <i class="fas fa-bell text-xl"></i>
+              <span
+                class="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">3</span>
+            </button>
+            <div class="flex items-center space-x-2">
+              <img src="https://ui-avatars.com/api/?name=John+Doe&background=6366f1&color=fff" alt="User"
+                class="h-8 w-8 rounded-full">
+              <span class="hidden sm:inline text-sm font-medium text-gray-700">Safdar</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Page Content -->
+      <main class="flex-1 p-4 sm:p-6 lg:p-8">
+        {% block content %}
+
+        {% endblock %}
+      </main>
+
+      <!-- Footer -->
+      <footer class="bg-white border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm text-gray-500">
+          &copy; 2026 My Company. All rights reserved.
+        </div>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    // Sidebar toggle for mobile
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const openBtn = document.getElementById('openSidebar');
+    const closeBtn = document.getElementById('closeSidebar');
+
+    function openSidebar() {
+      sidebar.classList.remove('-translate-x-full');
+      overlay.classList.remove('hidden');
+    }
+    function closeSidebar() {
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+    }
+
+    openBtn.addEventListener('click', openSidebar);
+    closeBtn.addEventListener('click', closeSidebar);
+    overlay.addEventListener('click', closeSidebar);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,252 @@
+{% extends 'manag/base.html' %}
+
+{% block title %}Sales Dashboard{% endblock %}
+{% block page_title %}Sales Dashboard{% endblock %}
+
+{% block content %}
+<!-- Date Range Filter -->
+<div class="flex flex-wrap gap-4 mb-6 bg-white p-4 rounded-lg shadow">
+    <div>
+        <label class="block text-sm font-medium text-gray-700">Start Date</label>
+        <input type="date" id="startDate"
+            class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+    </div>
+    <div>
+        <label class="block text-sm font-medium text-gray-700">End Date</label>
+        <input type="date" id="endDate"
+            class="mt-1 block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+    </div>
+    <div class="self-end">
+        <button id="applyFilter" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md">
+            Apply
+        </button>
+    </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white p-5 rounded-lg shadow">
+        <p class="text-sm text-gray-500">Total Revenue</p>
+        <p id="totalRevenue" class="text-2xl font-semibold text-gray-800">$0.00</p>
+    </div>
+    <div class="bg-white p-5 rounded-lg shadow">
+        <p class="text-sm text-gray-500">Total Orders</p>
+        <p id="totalOrders" class="text-2xl font-semibold text-gray-800">0</p>
+    </div>
+    <div class="bg-white p-5 rounded-lg shadow">
+        <p class="text-sm text-gray-500">Avg Order Value</p>
+        <p id="avgOrderValue" class="text-2xl font-semibold text-gray-800">$0.00</p>
+    </div>
+    <div class="bg-white p-5 rounded-lg shadow">
+        <p class="text-sm text-gray-500">Unique Products Sold</p>
+        <p id="uniqueProducts" class="text-2xl font-semibold text-gray-800">0</p>
+    </div>
+</div>
+
+<!-- Charts Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="text-lg font-semibold mb-4">Revenue by Product</h2>
+        <div class="h-64">
+            <canvas id="productChart" class="w-full h-full"></canvas>
+        </div>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="text-lg font-semibold mb-4">Revenue Over Time</h2>
+        <div class="h-64">
+            <canvas id="lineChart" class="w-full h-full"></canvas>
+        </div>
+    </div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white p-4 rounded-lg shadow">
+        <h2 class="text-lg font-semibold mb-4">Revenue by Category</h2>
+        <div class="h-64">
+            <canvas id="pieChart" class="w-full h-full"></canvas>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+<!-- Product List Section -->
+<div class="bg-white p-4 sm:p-6 rounded-lg shadow mt-6">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <h2 class="text-xl font-semibold text-gray-800">Product List</h2>
+        <div class="relative w-full sm:w-64">
+            <input 
+                type="text" 
+                id="productSearch" 
+                placeholder="Search products..." 
+                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+            <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+        </div>
+    </div>
+
+    <!-- Loading indicator (hidden by default) -->
+    <div id="productLoading" class="text-center py-4 text-gray-500 hidden">
+        <i class="fas fa-spinner fa-spin mr-2"></i>Loading products...
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity Sold</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
+                </tr>
+            </thead>
+            <tbody id="productTableBody" class="bg-white divide-y divide-gray-200">
+                <!-- Rows will be inserted here by JavaScript -->
+                <tr>
+                    <td colspan="5" class="text-center py-4 text-gray-500">Loading products...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+  <script>
+        // Initialize charts
+        let productChart, lineChart, pieChart;
+
+        function initCharts() {
+            const ctx1 = document.getElementById('productChart').getContext('2d');
+            productChart = new Chart(ctx1, {
+                type: 'bar',
+                data: { labels: [], datasets: [{ label: 'Revenue', data: [], backgroundColor: 'rgba(79, 70, 229, 0.7)' }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctx2 = document.getElementById('lineChart').getContext('2d');
+            lineChart = new Chart(ctx2, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Revenue', data: [], borderColor: 'rgba(16, 185, 129, 1)', tension: 0.3, fill: false }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctx3 = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(ctx3, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [{ data: [], backgroundColor: ['#f59e0b', '#3b82f6', '#ef4444', '#10b981', '#8b5cf6', '#ec4899'] }] },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            fetchProducts(); // Load all products initially
+
+            //
+            document.getElementById('productSearch').addEventListener('input', function() {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = setTimeout(() => {
+          fetchProducts(this.value.trim());
+           }, 9000);
+                      });
+            //
+
+
+
+
+        }
+
+        function updateDashboard(start, end) {
+            const params = new URLSearchParams();
+            if (start) params.append('start', start);
+            if (end) params.append('end', end);
+            const url = "{% url 'dashboard:data' %}" + (params.toString() ? '?' + params.toString() : '');
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Update stat cards
+                    document.getElementById('totalRevenue').textContent = '$' + data.stat_cards.total_revenue.toFixed(2);
+                    document.getElementById('totalOrders').textContent = data.stat_cards.total_orders;
+                    document.getElementById('avgOrderValue').textContent = '$' + data.stat_cards.avg_order_value.toFixed(2);
+                    document.getElementById('uniqueProducts').textContent = data.stat_cards.unique_products;
+
+                    // Update product chart
+                    productChart.data.labels = data.product_revenue.labels;
+                    productChart.data.datasets[0].data = data.product_revenue.values;
+                    productChart.update();
+
+                    // Update line chart
+                    lineChart.data.labels = data.daily_revenue.labels;
+                    lineChart.data.datasets[0].data = data.daily_revenue.values;
+                    lineChart.update();
+
+                    // Update pie chart
+                    pieChart.data.labels = data.category_revenue.labels;
+                    pieChart.data.datasets[0].data = data.category_revenue.values;
+                    pieChart.update();
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            // Set default dates (last 30 days)
+            const today = new Date();
+            const start = new Date();
+            start.setDate(today.getDate() - 29);
+            document.getElementById('startDate').value = start.toISOString().split('T')[0];
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            updateDashboard(
+                document.getElementById('startDate').value,
+                document.getElementById('endDate').value
+            );
+        });
+
+        // Apply filter button
+        document.getElementById('applyFilter').addEventListener('click', () => {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            updateDashboard(start, end);
+            // console.log("")
+        });
+
+
+
+
+    // product listing n filter
+    function fetchProducts(searchQuery = '') {
+    const params = new URLSearchParams();
+    if (searchQuery) params.append('q', searchQuery);
+    const url = "{% url 'dashboard:products' %}" + (params.toString() ? '?' + params.toString() : '');
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            renderProductList(data.products);
+        })
+        .catch(error => console.error('Error fetching products:', error));}
+
+    function renderProductList(products) {
+     const tbody = document.getElementById('productTableBody');
+     tbody.innerHTML = '';
+     if (!products || products.length === 0) {
+         tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-500">No products found</td></tr>';
+         return;
+     }
+
+     products.forEach(p => {
+         const row = document.createElement('tr');
+         row.innerHTML = `
+            <td class="px-4 py-3 text-sm text-gray-800">${p.product__name}</td>
+            <td class="px-4 py-3 text-sm text-gray-600">${p.product__category__name}</td>
+            <td class="px-4 py-3 text-sm text-gray-600">$${parseFloat(p.product__price).toFixed(2)}</td>
+            <td class="px-4 py-3 text-sm text-gray-600">${p.total_quantity}</td>
+            <td class="px-4 py-3 text-sm text-gray-600">$${parseFloat(p.total_revenue).toFixed(2)}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+    </script>
+{% endblock %}
